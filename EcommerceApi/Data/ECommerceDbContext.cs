@@ -195,7 +195,7 @@ namespace EcommerceApi.Data
                 .HasPrecision(18, 2)
                 .IsRequired();
 
-                entity.Property(e => e.PaymentStatus)
+                entity.Property(e => e.Status)
                 .IsRequired();
 
                 entity.Property(e => e.TransactionId)
@@ -209,7 +209,7 @@ namespace EcommerceApi.Data
 
 
                 // Index for performance : Relationships
-                entity.HasIndex(e => e.PaymentStatus).HasDatabaseName("IDX_Payments_Payments_Status");
+                entity.HasIndex(e => e.Status).HasDatabaseName("IDX_Payments_Payments_Status");
                 entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IDX_Payments_CreatedAt");
             });
         }

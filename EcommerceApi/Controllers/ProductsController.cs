@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using EcommerceApi.Data;
 using EcommerceApi.DTOs;
 using EcommerceApi.Models;
+using System.Collections;
 
 namespace EcommerceApi.Controllers
 {
@@ -182,10 +183,130 @@ namespace EcommerceApi.Controllers
             // Validate updates
             if (request.Price.HasValue && request.Price <= 0)
                 return BadRequest(new { message = "Product price must be greater than 0" });
-            if(request.StockQuantity.HasValue && request.StockQuantity < 0)
-                return BadRequest(new {})
+            if (request.StockQuantity.HasValue && request.StockQuantity < 0)
+                return BadRequest(new { message = "Stock quantity cannot be negative" });
+
+            //Update fields
+            if (!string.IsNullOrWhiteSpace(request.Name))
+                product.Name = request.Name.Trim();
+
+            if(request.Description!=null)
+                product.Description = request.Description.Trim();
+
+            if(request.Price.HasValue)
+                product.Price = request.Price.Value;
+
+            if(request.StockQuantity.HasValue)
+                product.StockQuantity = request.StockQuantity.Value;
+
+            if(!string.IsNullOrWhiteSpace(request.Category))
+                product.Category = request.Category.Trim();
+
+            if(request.IsActive.HasValue)
+                product.IsActive = request.IsActive.Value;
+
+            product.UpdatedAt = DateTime.UtcNow;
+
+            _context.Products.Update(product);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Product {ProductId} updated", id);
+
+            var dto = new ProductDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                Category = product.Category,
+                IsActive = product.IsActive,
+                CreatedAt = product.CreatedAt,
+                UpdatedAt = product.UpdatedAt,
+            };
+
+            return Ok(new { message = "Product updated successfully", product = dto });
         }
 
+        /// <summary>
+        /// Delete a product (Admin only)
+        /// </summary>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if(product == null)
+            {
+                _logger.LogWarning("Delete failed : Product with ID {ProductId} not found", id);
+                return NotFound(new { message = "Product not found" });
+            }
 
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Product {ProductId} deleted", id);
+
+            return Ok(new { message = "Product deleted successfully" });
+        }
+
+        /// <summary>
+        /// Get products by category
+        /// </summary>
+        [HttpGet("category/{category}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsByCategory(string category)
+        {
+            _logger.LogInformation("Fetching products for category: {Category}", category);
+
+            var products = await _context.Products
+                .Where(p => p.IsActive && p.Category.ToLower() == category.ToLower())
+                .OrderBy(p => p.Price)
+                .Select(p => new ProductDto
+                {
+                    Id=p.Id,
+                    Name=p.Name,
+                    Description=p.Description,
+                    Price=p.Price,
+                    StockQuantity=p.StockQuantity,
+                    Category=p.Category,
+                    IsActive=p.IsActive,
+                    CreatedAt=p.CreatedAt,
+                    UpdatedAt =p.UpdatedAt
+                })
+                .ToListAsync();
+
+            return Ok(products);
+        }
+
+        /// <summary>
+        /// Search products by name
+        /// </summary>
+        [HttpGet("search/{query}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<ProductDto>>> SearchProducts(string query)
+        {
+            _logger.LogInformation("Searching products wuth query: {Query}", query);
+
+            var products = await _context.Products
+                .Where(p=>p.IsActive && p.Name.ToLower().Contains(query.ToLower()))
+                .OrderBy(p => p.Name)
+                .Select(p=> new  ProductDto
+                {
+                    Id=p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price   = p.Price,
+                    StockQuantity = p.StockQuantity,
+                    Category = p.Category,
+                    IsActive = p.IsActive,
+                    CreatedAt = p.CreatedAt,
+                    UpdatedAt=p.UpdatedAt
+                })
+                .ToListAsync();
+
+            return Ok(products);
+        }
     }
 }

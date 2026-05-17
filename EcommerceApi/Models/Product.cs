@@ -40,12 +40,12 @@
         /// <summary>
         /// When the product was added to the store
         /// </summary>  
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         /// <summary>
         /// When the product was last updated
         /// </summary>  
-        /// public DateTime? UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
         
 
         /// Navigation properties

@@ -25,7 +25,7 @@
         /// <summary>
         /// Payment status indicates the current state of the payment. It can have values such as "Pending", "Completed", "Failed", "Refunded". This property is essential for tracking the progress of the payment and determining whether the order can be fulfilled based on the payment status.
         /// </summary>
-        public string PaymentStatus { get; set; } = PaymentStatus.Pending;
+        public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
 
         /// <summary>
         /// Transaction ID is a unique identifier provided by the payment gateway or processor (Stripe, Paypal, etc) for the transaction. This ID can be used for tracking and referencing the payment in case of disputes, refunds, or for auditing purposes. It is important to store this information to maintain a record of the transaction and facilitate any necessary follow-up actions related to the payment.

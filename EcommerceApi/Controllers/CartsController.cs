@@ -124,7 +124,7 @@ namespace EcommerceApi.Controllers
             var dto =MapCartToDto(cart);
             return Ok(dto);
         }
-
+        
         /// <summary>
         /// Update cart item quantity
         /// </summary>
